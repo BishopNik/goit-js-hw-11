@@ -74,7 +74,6 @@ function markupFetchSearchItem() {
 
 function onClickLoadmore() {
   Loading.dots();
-  console.log(paramFetch.page);
   fetchImage(({ page, perPage, searchItem } = paramFetch))
     .then(res => {
       const countFoudItem =
