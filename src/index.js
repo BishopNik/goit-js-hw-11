@@ -51,7 +51,7 @@ function onSearchClickBtn(e) {
 
 function markupFetchSearchItem() {
   Loading.dots();
-  fetchImage(({ page, perPage, searchItem } = paramFetch))
+  fetchImage(paramFetch)
     .then(res => {
       const countFoudItem =
         res.hits.length === 0 ? res.hits.length : res.totalHits;
@@ -74,11 +74,11 @@ function markupFetchSearchItem() {
 
 function onClickLoadmore() {
   Loading.dots();
-  fetchImage(({ page, perPage, searchItem } = paramFetch))
+  fetchImage(paramFetch)
     .then(res => {
       const countFoudItem =
         res.hits.length === 0 ? res.hits.length : res.totalHits;
-      const countPage = Math.ceil(countFoudItem / perPage);
+      const countPage = Math.ceil(countFoudItem / paramFetch.perPage);
       updatePage(res);
 
       scrollWindow();
