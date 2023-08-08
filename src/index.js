@@ -26,6 +26,7 @@ let memScrollY = window.pageYOffset;
 ref.btnLoadmore.addEventListener('click', onClickLoadmore);
 ref.searchForm.addEventListener('submit', onSearchClickBtn);
 window.addEventListener('scroll', throttle(onScrollLoadMore, 300));
+ref.radioBtn.addEventListener('change', onClickChange);
 
 const $lightbox = new SimpleLightbox('.gallery a', {
   captions: true,
@@ -187,4 +188,10 @@ function onScrollLoadMore() {
     loadStatus = true;
     onClickLoadmore();
   }
+}
+
+function onClickChange() {
+  ref.radioBtn.checked && ref.gallery.childElementCount
+    ? ref.btnLoadmore.classList.add('is-hidden')
+    : ref.btnLoadmore.classList.remove('is-hidden');
 }
