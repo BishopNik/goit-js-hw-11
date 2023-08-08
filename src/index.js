@@ -18,6 +18,7 @@ const paramFetch = {
   searchItem: '',
   page: 1,
   perPage: 15,
+  countFoundItem: 1,
 };
 const windowHeight = document.documentElement.clientHeight;
 let loadStatus = true;
@@ -54,12 +55,12 @@ function markupFetchSearchItem() {
   Loading.dots();
   fetchImage(paramFetch)
     .then(res => {
-      const countFoudItem =
+      paramFetch.countFoundItem =
         res.hits.length === 0 ? res.hits.length : res.totalHits;
-      if (countFoudItem) {
-        Notify.success(`Hooray! We found ${countFoudItem} images.`);
+
+      if (paramFetch.countFoundItem) {
+        Notify.success(`Hooray! We found ${paramFetch.countFoundItem} images.`);
         updatePage(res);
-        paramFetch.page += 1;
       } else {
         Notify.info('Nothing was found according to your request.');
       }
@@ -77,20 +78,19 @@ function onClickLoadmore() {
   Loading.dots();
   fetchImage(paramFetch)
     .then(res => {
-      const countFoudItem =
-        res.hits.length === 0 ? res.hits.length : res.totalHits;
-      const countPage = Math.ceil(countFoudItem / paramFetch.perPage);
+      const countPage = Math.ceil(
+        paramFetch.countFoundItem / paramFetch.perPage
+      );
       updatePage(res);
 
       scrollWindow();
 
-      if (countPage < paramFetch.page) {
+      if (countPage <= paramFetch.page) {
         ref.btnLoadmore.classList.add('is-hidden');
         Notify.info(
           "We're sorry, but you've reached the end of search results."
         );
       }
-      paramFetch.page += 1;
     })
     .catch(error => {
       Notify.failure('Unable to load results.');
@@ -99,6 +99,56 @@ function onClickLoadmore() {
       Loading.remove(350);
       loadStatus = false;
     });
+}
+
+function updatePage(res) {
+  paramFetch.page += 1;
+  const countPage = Math.ceil(paramFetch.countFoundItem / paramFetch.perPage);
+  if (countPage <= paramFetch.page) {
+    ref.btnLoadmore.classList.add('is-hidden');
+  }
+  ref.gallery.insertAdjacentHTML('beforeend', markupImg(res.hits));
+  $lightbox.refresh();
+  if (!ref.radioBtn.checked && countPage > paramFetch.page) {
+    ref.btnLoadmore.classList.remove('is-hidden');
+  }
+}
+
+function onScrollLoadMore() {
+  const btnHeigth = !ref.radioBtn.checked ? 115 : 0;
+  const galleryPos = ref.gallery.getBoundingClientRect().top + pageYOffset;
+  const galleryPosHeigth = ref.gallery.offsetHeight;
+  const currentScrollY = window.pageYOffset;
+  const statusBar =
+    (currentScrollY / (galleryPosHeigth - windowHeight + btnHeigth)) * 100;
+
+  ref.scrollbar.style.width = `${statusBar}vw`;
+
+  if (!ref.radioBtn.checked) {
+    return;
+  }
+
+  const countPage = Math.ceil(paramFetch.countFoundItem / paramFetch.perPage);
+  if (
+    pageYOffset > galleryPos + galleryPosHeigth - windowHeight &&
+    loadStatus === false &&
+    memScrollY < currentScrollY &&
+    countPage >= paramFetch.page
+  ) {
+    memScrollY = window.pageYOffset;
+    loadStatus = true;
+    onClickLoadmore();
+  }
+}
+
+function onClickChange() {
+  const countPage = Math.ceil(paramFetch.countFoundItem / paramFetch.perPage);
+  if (paramFetch.page === 1 || paramFetch.page >= countPage) {
+    return;
+  }
+  ref.radioBtn.checked && ref.gallery.childElementCount
+    ? ref.btnLoadmore.classList.add('is-hidden')
+    : ref.btnLoadmore.classList.remove('is-hidden');
 }
 
 function scrollWindow() {
@@ -149,49 +199,11 @@ function markupImg(data) {
     .join('');
 }
 
-function updatePage(res) {
-  ref.gallery.insertAdjacentHTML('beforeend', markupImg(res.hits));
-  $lightbox.refresh();
-  if (!ref.radioBtn.checked) {
-    ref.btnLoadmore.classList.remove('is-hidden');
-  }
-}
-
 function resetParamNewSearch() {
   ref.gallery.innerHTML = '';
   paramFetch.page = 1;
+  paramFetch.countFoundItem = 1;
   memScrollY = window.pageYOffset;
   ref.scrollbar.style.width = `0vw`;
   ref.btnLoadmore.classList.add('is-hidden');
-}
-
-function onScrollLoadMore() {
-  const btnHeigth = !ref.radioBtn.checked ? 115 : 0;
-  const galleryPos = ref.gallery.getBoundingClientRect().top + pageYOffset;
-  const galleryPosHeigth = ref.gallery.offsetHeight;
-  const currentScrollY = window.pageYOffset;
-  const statusBar =
-    (currentScrollY / (galleryPosHeigth - windowHeight + btnHeigth)) * 100;
-
-  ref.scrollbar.style.width = `${statusBar}vw`;
-
-  if (!ref.radioBtn.checked) {
-    return;
-  }
-
-  if (
-    pageYOffset > galleryPos + galleryPosHeigth - windowHeight &&
-    loadStatus === false &&
-    memScrollY < currentScrollY
-  ) {
-    memScrollY = window.pageYOffset;
-    loadStatus = true;
-    onClickLoadmore();
-  }
-}
-
-function onClickChange() {
-  ref.radioBtn.checked && ref.gallery.childElementCount
-    ? ref.btnLoadmore.classList.add('is-hidden')
-    : ref.btnLoadmore.classList.remove('is-hidden');
 }
