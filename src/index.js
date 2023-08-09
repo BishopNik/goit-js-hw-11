@@ -1,10 +1,8 @@
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
-import { Notify } from 'notiflix/build/notiflix-notify-aio';
-import { Loading } from 'notiflix/build/notiflix-loading-aio';
+import { Notify, Loading } from 'notiflix';
 import 'bootstrap/dist/css/bootstrap.min.css';
 var throttle = require('lodash.throttle');
-
 import { fetchImage } from './fetch_api.js';
 
 const ref = {
@@ -20,14 +18,14 @@ const paramFetch = {
   perPage: 15,
   countFoundItem: 1,
 };
-const windowHeight = document.documentElement.clientHeight;
+const windowHeight = document.documentElement.clientHeight - 85;
 let loadStatus = true;
 let memScrollY = window.pageYOffset;
 
-ref.btnLoadmore.addEventListener('click', onClickLoadmore);
 ref.searchForm.addEventListener('submit', onSearchClickBtn);
-window.addEventListener('scroll', throttle(onScrollLoadMore, 300));
+ref.btnLoadmore.addEventListener('click', onClickLoadmore);
 ref.radioBtn.addEventListener('change', onClickChange);
+window.addEventListener('scroll', throttle(onScrollLoadMore, 300));
 
 const $lightbox = new SimpleLightbox('.gallery a', {
   captions: true,
@@ -81,9 +79,6 @@ function onClickLoadmore() {
       const countPage = Math.ceil(
         paramFetch.countFoundItem / paramFetch.perPage
       );
-      updatePage(res);
-
-      scrollWindow();
 
       if (countPage <= paramFetch.page) {
         ref.btnLoadmore.classList.add('is-hidden');
@@ -91,6 +86,8 @@ function onClickLoadmore() {
           "We're sorry, but you've reached the end of search results."
         );
       }
+      updatePage(res);
+      scrollWindow();
     })
     .catch(error => {
       Notify.failure('Unable to load results.');
@@ -104,7 +101,7 @@ function onClickLoadmore() {
 function updatePage(res) {
   paramFetch.page += 1;
   const countPage = Math.ceil(paramFetch.countFoundItem / paramFetch.perPage);
-  if (countPage <= paramFetch.page) {
+  if (countPage < paramFetch.page) {
     ref.btnLoadmore.classList.add('is-hidden');
   }
   ref.gallery.insertAdjacentHTML('beforeend', markupImg(res.hits));
@@ -116,8 +113,7 @@ function updatePage(res) {
 
 function onScrollLoadMore() {
   const btnHeigth = !ref.radioBtn.checked ? 115 : 0;
-  const galleryPos = ref.gallery.getBoundingClientRect().top + pageYOffset;
-  const galleryPosHeigth = ref.gallery.offsetHeight;
+  const galleryPosHeigth = ref.gallery.offsetHeight - 85;
   const currentScrollY = window.pageYOffset;
   const statusBar =
     (currentScrollY / (galleryPosHeigth - windowHeight + btnHeigth)) * 100;
@@ -130,7 +126,7 @@ function onScrollLoadMore() {
 
   const countPage = Math.ceil(paramFetch.countFoundItem / paramFetch.perPage);
   if (
-    pageYOffset > galleryPos + galleryPosHeigth - windowHeight &&
+    pageYOffset > galleryPosHeigth - windowHeight &&
     loadStatus === false &&
     memScrollY < currentScrollY &&
     countPage >= paramFetch.page
