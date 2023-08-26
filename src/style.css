@@ -79,6 +79,7 @@
 
 .gallery {
 	display: flex;
+	justify-content: space-evenly;
 	gap: 25px;
 	flex-wrap: wrap;
 	padding-top: 105px;
